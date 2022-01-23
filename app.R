@@ -19,6 +19,11 @@ library(shinyWidgets)
 library(zoo)
 library(tidyselect)
 library(tidyr)
+library(here)
+
+source(here("download_cy_daily_stats.R"))
+
+covid_daily_stats_df <- download_cy_daily_stats()
 
 rdrop2::drop_auth(rdstoken = "token.rds")
 
@@ -34,14 +39,16 @@ create_roll_avg <- function(dataset_in, roll_avg_d, var_displayed){
                .after = !!(var_displayed))
 }
 
-if (!exists('data_covid_cy')){
-    rdrop2::drop_download(
-        path = 'cy_daily_cov19_stats/cy_daily_cov19_stats_master.rds', 
-        local_path = 'cy_daily_cov19_stats_master.rds', 
-        overwrite = TRUE
-    )
-    data_covid_cy <- readRDS('cy_daily_cov19_stats_master.rds')
-} 
+# if (!exists('covid_daily_stats_df')){
+#     rdrop2::drop_download(
+#         path = 'cy_daily_cov19_stats/cy_daily_cov19_stats_master.rds', 
+#         local_path = 'cy_daily_cov19_stats_master.rds', 
+#         overwrite = TRUE
+#     )
+#     covid_daily_stats_df <- readRDS('cy_daily_cov19_stats_master.rds')
+# } 
+
+
 
 ui <- fluidPage(
     titlePanel('Cyprus COVID-19 Daily Stats'),
@@ -59,15 +66,15 @@ ui <- fluidPage(
                             'Total cases' = "total_cases", 'Total Deaths' = "total_deaths", 
                             'Total PCR tests' = "total_pcr_tests", 
                             'Total Rapid Antigen Tests' = "total_ra_tests", 'Total Tests' = "total_tests"),
-                # choices = names(data_covid_cy %>% dplyr::select(-date, -notes, -entry_id)), 
+                # choices = names(covid_daily_stats_df %>% dplyr::select(-date, -notes, -entry_id)), 
                 multiple = TRUE, 
                 selected = "daily_new_cases"
             ), 
             
             dateRangeInput('date_range', 'Date range:',
-                           start = max(data_covid_cy$date) -7, end = max(data_covid_cy$date),
+                           start = max(covid_daily_stats_df$date) -7, end = max(covid_daily_stats_df$date),
                            format = "dd-mm-yyyy", 
-                           min = min(data_covid_cy$date), max = max(data_covid_cy$date)
+                           min = min(covid_daily_stats_df$date), max = max(covid_daily_stats_df$date)
             ), 
             
             conditionalPanel(
@@ -119,7 +126,7 @@ server <- function(input, output){
                            input$roll_avg_hospitalised_cases, input$roll_avg_severe_cases, 
                            input$roll_avg_cases_in_icus, input$roll_avg_incubated_cases)
         
-        output_data <- data_covid_cy %>%
+        output_data <- covid_daily_stats_df %>%
             dplyr::select(date, !!!rlang::syms(input$variables_inc))
         
         if(is.null(roll_avg)){
