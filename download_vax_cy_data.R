@@ -78,26 +78,10 @@ get_cy_vax_data_brief<- function(){
                               doseadditional1_JANSS) / denominator
     ) %>%
     ungroup()
+  
+  cy_vax_data_brief <- cy_vax_data_brief %>%
+    select(yearweekiso, age_group, fully_vacc, booster_vacc)
 }
-
-get_cy_vax_data_brief() %>% View()
-
-data1 <- get_cy_vax_data_brief()
-
-glimpse(data1)
-
-
-data_covid3 <- data_covid2 %>%
-  dplyr::group_by(age_group) %>%
-  dplyr::mutate(
-    fully_vacc = 
-      cumsum(seconddose_COM + seconddose_MOD + seconddose_AZ + firstdose_JANSS) / denominator, 
-    booster_vacc = cumsum(doseadditional1_COM + doseadditional1_MOD + doseadditional1_AZ + 
-                       doseadditional1_JANSS) / denominator
-  ) %>%
-  ungroup()
-
- %>% View()
 
 # ggplot(data = data_covid3, aes(x=yearweekiso)) + 
 #   geom_line(aes(y = fully_vaccinated, color = age_group), size = 1.25) + 
